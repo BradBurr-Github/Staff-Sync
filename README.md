@@ -3,7 +3,7 @@ Staff Sync is a useful application to manage all of your Employees.
 ## Description
 Staff Sync allows a user to add, edit and delete Employees of their company in a database.  This command-line application is very easy to use and very responsive.  Managing the Employees of your company has never been easier.
 <br/>
-<img src="./public/assets/images/webpage.png" alt="Staff Sync image"/>
+<img src="./assets/images/webpage.png" alt="Staff Sync image"/>
 <br/>
 ## Table of Contents
 1. [Installation](#installation)
