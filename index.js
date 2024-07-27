@@ -22,14 +22,14 @@ const pool = new Pool(
     host: 'localhost',
     database: 'employees_db'
   },
-  console.log(`Connected to the employees_db database.`)
+  console.log(`Connected the employees_db database.`)
 )
 
 const queries = require('./db/queries.js');
 console.log(queries)
 // Connect to Pool object
 
-const sql = `SELECT id, dept_name AS DEPT FROM depts`;
+//const sql = `SELECT id, dept_name AS DEPT FROM depts`;
 async function executeQuery(query, params = []) {
   try {
     // Connect to the PostgreSQL client
@@ -51,11 +51,14 @@ async function executeQuery(query, params = []) {
 // Example usage
 async function main() {
   // Get all rows
-  await executeQuery(queries.getAllRows);
+  //await executeQuery(queries.getAllRows);
+  //await executeQuery(queries.getRowById(2));
+  
 
   // Get a row by ID
-  const id = 1; // Replace with the actual ID you want to query
-  await executeQuery(queries.getRowById, 1);
+  const id = [10]; // Replace with the actual ID you want to query
+  //await executeQuery(queries.getRowById, id);
+  await executeQuery(queries.deleteEmployeeById,id);
 }
 
 main();
