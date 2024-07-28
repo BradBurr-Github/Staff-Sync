@@ -1,70 +1,69 @@
 // Include packages needed for this application
-const express = require('express');
 const inquirer = require('inquirer');
 const logo = require('asciiart-logo');
+const db = require('./db');
 
-// Import and require Pool (node-postgres)
-const { Pool } = require('pg');
 
-// Define port and start express server
-const PORT = process.env.PORT || 3001;
-const app = express();
-
-// Express middleware
-app.use(express.urlencoded({ extended: false }));
-app.use(express.json());
-
-// Connect to the database
-const pool = new Pool(
-  {
-    user: 'postgres',
-    password: 'Brad9',
-    host: 'localhost',
-    database: 'employees_db'
-  },
-  console.log(`Connected the employees_db database.`)
-)
-
-const queries = require('./db/queries.js');
-console.log(queries)
+//const queries = require('./db/queries.js');
+//console.log(queries)
 // Connect to Pool object
 
-//const sql = `SELECT id, dept_name AS DEPT FROM depts`;
-async function executeQuery(query, params = []) {
-  try {
-    // Connect to the PostgreSQL client
-    await pool.connect();
-    console.log('Connected to the database.');
 
-    // Execute the query
-    const res = await pool.query(query, params);
-    console.log('Query executed successfully:', res.rows);
-  } catch (err) {
-    console.error('Error executing query:', err.stack);
-  } finally {
-    // Close the connection
-    await pool.end();
-    console.log('Database connection closed.');
-  }
-}
 
 // Example usage
 async function main() {
-  // Get all rows
-  //await executeQuery(queries.getAllRows);
-  //await executeQuery(queries.getRowById(2));
-  
+  // Display Staff Sync logo
+  const logoText = logo({name: "Staff Sync"}).render();
+  console.log(logoText);  
 
-  // Get a row by ID
-  const id = [10]; // Replace with the actual ID you want to query
-  //await executeQuery(queries.getRowById, id);
-  await executeQuery(queries.deleteEmployeeById,id);
+  try {
+    const database = new DB();
+    const result = database.findAllEmployees();
+    console.log(result);
+
+
+    //const res = await pool.query(query, params);
+//     console.log('Query executed successfully:', res.rows);
+
+
+  }
+  catch (err) {
+    console.error('Error executing query:', err.stack);
+  }
 }
 
 main();
 
 
+// Get a row by ID
+//onst id = [10]; // Replace with the actual ID you want to query
+//await executeQuery(queries.getRowById, id);
+//await executeQuery(queries.deleteEmployeeById,id);
 
+
+
+// Get all rows
+  //await executeQuery(queries.getAllRows);
+  //await executeQuery(queries.getRowById(2));
+
+//const sql = `SELECT id, dept_name AS DEPT FROM depts`;
+// async function executeQuery(query, params = []) {
+//   try {
+//     // Connect to the PostgreSQL client
+//     await pool.connect();
+//     console.log('Connected to the database.');
+
+//     // Execute the query
+//     const res = await pool.query(query, params);
+//     console.log('Query executed successfully:', res.rows);
+//   } catch (err) {
+//     console.error('Error executing query:', err.stack);
+//   } finally {
+//     // Close the connection
+//     await pool.end();
+//     console.log('Database connection closed.');
+//   }
+// }
 
 
 
@@ -152,9 +151,7 @@ const questionDbTask = [
     }
 ];
 
-// Display Staff Sync logo
-const logoText = logo({name: "Staff Sync"}).render();
-console.log(logoText);
+
 
 // Ask the user the NINE questions to create the README.md file
 // inquirer.prompt(questionDbTask)
@@ -163,7 +160,7 @@ console.log(logoText);
 // });
 
 // Function to initialize app
-function init() {}
+//function init() {}
 
 // Function call to initialize app
 //init();
