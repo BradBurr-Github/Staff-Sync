@@ -22,7 +22,6 @@ const questionDbTask = [
           tasksToPerform[10],tasksToPerform[11],tasksToPerform[12],tasksToPerform[13],tasksToPerform[14]
       ],
 
-//      "What is the name of the Department?"
 //      "What is the name of the Role?"
 //      "What is the salary of the Role?"
 //      "Which Department does the Role belong to?"
@@ -49,12 +48,36 @@ const questionDbTask = [
 
 // FUNCTIONS TO PRINT QUERIES
 // ==========================
+// Print ALL Departments
+async function printAllDepartments() {
+  try {
+    const datatbase = new DB();
+    // Query to get ALL departments
+    let result = await datatbase.getAllDepartments();
+    // Print ALL departments to the screen
+    const p = new Table();
+    p.addRows(result.rows);
+    p.printTable();
+  } catch (err) {
+    console.error('Error printing ALL departments:', err.stack);
+  }
+}
+// Print ALL Roles
+async function printAllRoles() {
+  const datatbase = new DB();
+  // Query to get ALL roles
+  let result = await datatbase.getAllRoles();
+  // Print ALL roles to the screen
+  const p = new Table();
+  p.addRows(result.rows);
+  p.printTable();
+}
 // Print ALL Employees
 async function printAllEmployees() {
   try {
     let employees = [];
     let manager = '';
-    let datatbase = new DB();
+    const datatbase = new DB();
     // Query to get ALL employees
     let result = await datatbase.getAllEmployees();
     // Add employees to array
@@ -82,7 +105,7 @@ async function addDepartment() {
   try {
     const answer = await inquirer.prompt({type:'input',name:'dept',message:'What is the name of the new department?',
                          validate: function(value) {if (value.trim() !== '') {return true;}return 'Please enter a valid name';}});
-    let datatbase = new DB();
+    const datatbase = new DB();
     // Add new department that was specified by the user
     const arrayDept = [answer.dept];
     let result = await datatbase.addNewDepartment(arrayDept);
@@ -115,8 +138,10 @@ async function main() {
       } else {
         switch(action) {
           case tasksToPerform[0]:     // View all departments
+            await printAllDepartments();
             break;
           case tasksToPerform[1]:     // View all roles
+            await printAllRoles();
             break;
           case tasksToPerform[2]:     // View all employees
             await printAllEmployees();

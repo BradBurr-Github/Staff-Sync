@@ -35,6 +35,17 @@ class DB {
         }
     }
 
+    // Query to return ALL Departments
+    getAllDepartments() {
+        return this.query('SELECT id as "Id", dept_name as "Dept_Name" ' +
+                          'FROM depts ORDER BY id');
+    }
+    // Query to return ALL Roles
+    getAllRoles() {
+        return this.query('SELECT r.id as "Id", r.title as "Title", d.dept_name as "Dept_Name", r.salary as "Salary" ' +
+                          'FROM roles r LEFT JOIN depts d ON d.id=r.dept_id ' +
+                          'ORDER BY r.id');
+    }
     // Query to return ALL employees
     getAllEmployees() {
         return this.query('SELECT e.id, e.firstName as "eFirstName", e.lastName as "eLastName", r.title, ' +
