@@ -51,27 +51,45 @@ const questionDbTask = [
 // ==========================
 // Print ALL Employees
 async function printAllEmployees() {
-  let employees = [];
-  let manager = '';
-  let datatbase = new DB();
-  // Query to get ALL employees
-  let result = await datatbase.getAllEmployees();
-  // Add employees to array
-  for(let i=0; i<result.rowCount; i++) {
-    if(result.rows[i].mFirstName === null || result.rows[i].mLastName === null ) {
-        manager = '';
-    } else {
-      manager = `${result.rows[i].mFirstName} ${result.rows[i].mLastName}`;
+  try {
+    let employees = [];
+    let manager = '';
+    let datatbase = new DB();
+    // Query to get ALL employees
+    let result = await datatbase.getAllEmployees();
+    // Add employees to array
+    for(let i=0; i<result.rowCount; i++) {
+      if(result.rows[i].mFirstName === null || result.rows[i].mLastName === null ) {
+          manager = '';
+      } else {
+        manager = `${result.rows[i].mFirstName} ${result.rows[i].mLastName}`;
+      }
+      employees.push({Id:result.rows[i].id, First_Name:result.rows[i].eFirstName,
+                      Last_Name:result.rows[i].eLastName, Title:result.rows[i].title,
+                      Dept:result.rows[i].dept_name, Salary:result.rows[i].salary,
+                      Manager:manager})
     }
-    employees.push({Id:result.rows[i].id, First_Name:result.rows[i].eFirstName,
-                    Last_Name:result.rows[i].eLastName, Title:result.rows[i].title,
-                    Dept:result.rows[i].dept_name, Salary:result.rows[i].salary,
-                    Manager:manager})
+    // Print ALL employees to the screen
+    const p = new Table();
+    p.addRows(employees);
+    p.printTable();
+  } catch (err) {
+    console.error('Error printing ALL employees:', err.stack);
   }
-  // Print ALL employees to the screen
-  const p = new Table();
-  p.addRows(employees);
-  p.printTable();
+}
+// Add a Department
+async function addDepartment() {
+  try {
+    const answer = await inquirer.prompt({type:'input',name:'dept',message:'What is the name of the new department?',
+                         validate: function(value) {if (value.trim() !== '') {return true;}return 'Please enter a valid name';}});
+    let datatbase = new DB();
+    // Add new department that was specified by the user
+    const arrayDept = [answer.dept];
+    let result = await datatbase.addNewDepartment(arrayDept);
+    console.log(`The "${answer.dept}" department was added to the database.`);
+  } catch (err) {
+    console.error('Error adding a department:', err.stack);
+  }
 }
 
 // Display the Main Menu to ask the user the what action they want to perform
@@ -104,6 +122,7 @@ async function main() {
             await printAllEmployees();
             break;
           case tasksToPerform[3]:     // Add a department
+            await addDepartment();
             break;
           case tasksToPerform[4]:     // Add a role
             break;
@@ -129,7 +148,7 @@ async function main() {
       }
     }
   } catch (err) {
-    console.error('Error executing query:', err.stack);
+    console.error('Error selecting a task:', err.stack);
   }
 }
 

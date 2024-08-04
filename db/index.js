@@ -41,8 +41,11 @@ class DB {
                           'd.dept_name, r.salary, m.firstName as "mFirstName", m.lastName as "mLastName" ' +
                           'FROM employees e LEFT JOIN roles r ON r.id=e.role_id ' +
                           'LEFT JOIN depts d ON d.id=r.dept_id LEFT JOIN employees m ON m.id=e.manager_id ' +
-                          'ORDER BY e.lastName, e.firstName'
-        );
+                          'ORDER BY e.lastName, e.firstName');
+    }
+    // SQL Statement to add a new Department
+    addNewDepartment(deptName) {
+        return this.query('INSERT INTO depts (dept_name) VALUES ($1)', deptName);
     }
 }
 
