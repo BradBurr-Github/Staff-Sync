@@ -24,6 +24,7 @@ const pool = new Pool(
 class DB {
     constructor() {}
 
+    // Asyncronous query that accepts arguments
     async query(sql, args = []) {
         const client = await pool.connect();
         try {
@@ -34,10 +35,12 @@ class DB {
         }
     }
 
-    findAllEmployees() {
-        return this.query('SELECT e.id, e.firstName, e.lastName, r.title, d.dept_name, r.salary, m.firstName, m.lastName ' +
+    // Query to return ALL employees
+    getAllEmployees() {
+        return this.query('SELECT e.id, e.firstName as "eFirstName", e.lastName as "eLastName", r.title, ' +
+                          'd.dept_name, r.salary, m.firstName as "mFirstName", m.lastName as "mLastName" ' +
                           'FROM employees e LEFT JOIN roles r ON r.id=e.role_id ' +
-                          'LEFT JOIN depts d ON d.id=r.id LEFT JOIN employees m ON m.id=e.manager_id ' +
+                          'LEFT JOIN depts d ON d.id=r.dept_id LEFT JOIN employees m ON m.id=e.manager_id ' +
                           'ORDER BY e.lastName, e.firstName'
         );
     }
