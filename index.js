@@ -20,11 +20,10 @@ const questionDbTask = [
           tasksToPerform[0],tasksToPerform[1],tasksToPerform[2],tasksToPerform[3],tasksToPerform[4],
           tasksToPerform[5],tasksToPerform[6],tasksToPerform[7],tasksToPerform[8],tasksToPerform[9],
           tasksToPerform[10],tasksToPerform[11],tasksToPerform[12],tasksToPerform[13],tasksToPerform[14]
-      ],
+      ]
+  }
+];
 
-//      "What is the name of the Role?"
-//      "What is the salary of the Role?"
-//      "Which Department does the Role belong to?"
 //      "What is the employee's First Name?"
 //      "What is the employee's Last Name?"
 //      "What is the employee's Role?"
@@ -37,8 +36,7 @@ const questionDbTask = [
 //      "Which Employee do you want to delete?"
 //      "Which Department do you want to view a total utilized budget for?"
 
-  }
-];
+  
 
   // {
   //   type: 'input',
@@ -53,10 +51,10 @@ async function printAllDepartments() {
   try {
     const datatbase = new DB();
     // Query to get ALL departments
-    let result = await datatbase.getAllDepartments();
+    let resDepts = await datatbase.getAllDepartments();
     // Print ALL departments to the screen
     const p = new Table();
-    p.addRows(result.rows);
+    p.addRows(resDepts.rows);
     p.printTable();
   } catch (err) {
     console.error('Error printing ALL departments:', err.stack);
@@ -66,10 +64,10 @@ async function printAllDepartments() {
 async function printAllRoles() {
   const datatbase = new DB();
   // Query to get ALL roles
-  let result = await datatbase.getAllRoles();
+  let resRoles = await datatbase.getAllRoles();
   // Print ALL roles to the screen
   const p = new Table();
-  p.addRows(result.rows);
+  p.addRows(resRoles.rows);
   p.printTable();
 }
 // Print ALL Employees
@@ -79,17 +77,17 @@ async function printAllEmployees() {
     let manager = '';
     const datatbase = new DB();
     // Query to get ALL employees
-    let result = await datatbase.getAllEmployees();
+    let resEmps = await datatbase.getAllEmployees();
     // Add employees to array
-    for(let i=0; i<result.rowCount; i++) {
-      if(result.rows[i].mFirstName === null || result.rows[i].mLastName === null ) {
+    for(let i=0; i<resEmps.rowCount; i++) {
+      if(resEmps.rows[i].mFirstName === null || resEmps.rows[i].mLastName === null ) {
           manager = '';
       } else {
-        manager = `${result.rows[i].mFirstName} ${result.rows[i].mLastName}`;
+        manager = `${resEmps.rows[i].mFirstName} ${resEmps.rows[i].mLastName}`;
       }
-      employees.push({Id:result.rows[i].id, First_Name:result.rows[i].eFirstName,
-                      Last_Name:result.rows[i].eLastName, Title:result.rows[i].title,
-                      Dept:result.rows[i].dept_name, Salary:result.rows[i].salary,
+      employees.push({Id:resEmps.rows[i].id, First_Name:resEmps.rows[i].eFirstName,
+                      Last_Name:resEmps.rows[i].eLastName, Title:resEmps.rows[i].title,
+                      Dept:resEmps.rows[i].dept_name, Salary:resEmps.rows[i].salary,
                       Manager:manager})
     }
     // Print ALL employees to the screen
@@ -104,14 +102,66 @@ async function printAllEmployees() {
 async function addDepartment() {
   try {
     const answer = await inquirer.prompt({type:'input',name:'dept',message:'What is the name of the new department?',
-                         validate: function(value) {if (value.trim() !== '') {return true;}return 'Please enter a valid name';}});
+                         validate: function(value) {if (value.trim() !== '') {return true;} return 'Please enter a valid name.';}});
     const datatbase = new DB();
     // Add new department that was specified by the user
     const arrayDept = [answer.dept];
-    let result = await datatbase.addNewDepartment(arrayDept);
+    await datatbase.addNewDepartment(arrayDept);
     console.log(`The "${answer.dept}" department was added to the database.`);
   } catch (err) {
     console.error('Error adding a department:', err.stack);
+  }
+}
+// Add a Role
+async function addRole() {
+  try {
+    let i = 0;
+    let depts = [];
+    const datatbase = new DB();
+    // Run query to get all Departments
+    let resDepts = await datatbase.getAllDepartments();
+    // Add departments to array
+    for(i=0; i<resDepts.rowCount; i++) {
+      depts.push(resDepts.rows[i].Dept_Name);
+    }
+    // Put 3 questions into an array
+    const questionsAddRole = [
+      { type: 'input',
+        name: 'role',
+        message:'What is the name of the new role?',
+        validate: function(value) {if (value.trim() !== '') {return true;}return 'Please enter a valid name.';}
+      },
+      { type: 'input',
+        name: 'salary',
+        message:'What is the salary of the new role?',
+        validate: function(value) {
+          const valid = !isNaN(parseInt(value)) && isFinite(value);
+          return valid || 'Please enter a valid number';
+        }
+      },
+      {
+        type: 'rawlist',
+        name: 'dept',
+        message: 'Which department does the new role belong to?',
+        choices: depts
+      }
+    ];
+    // Ask user the 3 questions needed for adding a new role
+    const answer = await inquirer.prompt(questionsAddRole);
+    // Find the Id of the Department that was selected by the user
+    let deptSelected = 1;
+    for(i=0; i<resDepts.rowCount; i++) {
+      if( resDepts.rows[i].Dept_Name === answer.dept ) {
+        deptSelected = resDepts.rows[i].Id;
+        break;
+      }
+    }
+    const arrayAnswers = [answer.role, answer.salary, deptSelected];
+    // Add new role
+    await datatbase.addNewRole(arrayAnswers);
+    console.log(`The "${answer.role}" role was added to the database.`);
+  } catch (err) {
+    console.error('Error adding a role:', err.stack);
   }
 }
 
@@ -150,6 +200,7 @@ async function main() {
             await addDepartment();
             break;
           case tasksToPerform[4]:     // Add a role
+            await addRole();
             break;
           case tasksToPerform[5]:     // Add an employee
             break;

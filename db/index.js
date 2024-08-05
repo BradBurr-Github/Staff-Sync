@@ -58,6 +58,10 @@ class DB {
     addNewDepartment(deptName) {
         return this.query('INSERT INTO depts (dept_name) VALUES ($1)', deptName);
     }
+    // SQL Statement to add a new Role
+    addNewRole(roleAnswersArray) {
+        return this.query('INSERT INTO roles (title, salary, dept_id) VALUES ($1,$2,$3)', roleAnswersArray);
+    }
 }
 
 module.exports = DB;
