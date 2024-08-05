@@ -62,6 +62,10 @@ class DB {
     addNewRole(roleAnswersArray) {
         return this.query('INSERT INTO roles (title, salary, dept_id) VALUES ($1,$2,$3)', roleAnswersArray);
     }
+    // SQL Statement to add a new Employee
+    addNewEmployee(roleAnswersArray) {
+        return this.query('INSERT INTO employees (firstName, lastName, role_id, manager_id) VALUES ($1,$2,$3,$4)', roleAnswersArray);
+    }
 }
 
 module.exports = DB;

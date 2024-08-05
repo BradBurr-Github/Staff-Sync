@@ -24,10 +24,7 @@ const questionDbTask = [
   }
 ];
 
-//      "What is the employee's First Name?"
-//      "What is the employee's Last Name?"
-//      "What is the employee's Role?"
-//      "Who is the employee's Manager?"
+
 //      "Which Emploee's role do you want to update?"
 //      "Which Role do you want to assign the selected employee?"
 //      "Which Employee's Manager do you want to update?"
@@ -164,6 +161,79 @@ async function addRole() {
     console.error('Error adding a role:', err.stack);
   }
 }
+// Add an Employee
+async function addEmployee() {
+  try {
+    let i = 0;
+    let roles = [];
+    let managers = [];
+    const datatbase = new DB();
+    // Run query to get all Roles
+    let resRoles = await datatbase.getAllRoles();
+    // Add roles to array
+    for(i=0; i<resRoles.rowCount; i++) {
+      roles.push(resRoles.rows[i].Title);
+    }
+    // Run query to get all Employees
+    let resEmployees = await datatbase.getAllEmployees();
+    // Add employees to array
+    managers.push('None');
+    for(i=0; i<resEmployees.rowCount; i++) {
+      managers.push(`${resEmployees.rows[i].eFirstName} ${resEmployees.rows[i].eLastName}`);
+    }
+    // Put 3 questions into an array
+    const questionsAddEmployee = [
+      { type: 'input',
+        name: 'firstName',
+        message:"What is the employee's first name?",
+        validate: function(value) {if (value.trim() !== '') {return true;}return 'Please enter a valid first name.';}
+      },
+      { type: 'input',
+        name: 'lastName',
+        message:"What is the employee's last name?",
+        validate: function(value) {if (value.trim() !== '') {return true;}return 'Please enter a valid last name.';}
+      },
+      {
+        type: 'rawlist',
+        name: 'role',
+        message: "What is the employee's role?",
+        choices: roles
+      },
+      {
+        type: 'rawlist',
+        name: 'manager',
+        message: "Who is the employee's Manager?",
+        choices: managers
+      }
+    ];
+    // Ask user the 3 questions needed for adding a new employee
+    const answer = await inquirer.prompt(questionsAddEmployee);
+    // Find the Id of the Role that was selected by the user
+    let roleSelected = 1;
+    for(i=0; i<resRoles.rowCount; i++) {
+      if( resRoles.rows[i].Title === answer.role ) {
+        roleSelected = resRoles.rows[i].Id;
+        break;
+      }
+    }
+    // Find the Id of the Employee that was selected by the user as the 'Manager'
+    let employeeSelected = null;
+    let currEmployee = '';
+    for(i=0; i<resEmployees.rowCount; i++) {
+      currEmployee = `${resEmployees.rows[i].eFirstName} ${resEmployees.rows[i].eLastName}`;
+      if(currEmployee === answer.manager) {
+        employeeSelected = resEmployees.rows[i].id;
+        break;
+      }
+    }
+    const arrayAnswers = [answer.firstName, answer.lastName, roleSelected, employeeSelected];
+    // Add new employee
+    await datatbase.addNewEmployee(arrayAnswers);
+    console.log(`Employee "${answer.firstName} ${answer.lastName}" was added to the database.`);
+  } catch (err) {
+    console.error('Error adding a role:', err.stack);
+  }
+}
 
 // Display the Main Menu to ask the user the what action they want to perform
 async function loadMainMenuPrompts() {
@@ -203,6 +273,7 @@ async function main() {
             await addRole();
             break;
           case tasksToPerform[5]:     // Add an employee
+            await addEmployee();
             break;
           case tasksToPerform[6]:     // Update an employee role
             break;
