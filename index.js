@@ -6,6 +6,7 @@ const { Table } = require('console-table-printer');  // package to format table 
 
 // Global Variables
 let keepRunningApp = true;
+const unassigned = '<UNASSIGNED>';
 const tasksToPerform = ["View all departments","View all roles","View all employees","Add a department","Add a role",
                         "Add an employee","Update an employee role","Update employee's manager","View employee by manager","View employee by department",
                         "Delete a department","Delete a role","Delete an employee","View total utilized budget of a department","EXIT APPLICATION"]
@@ -38,18 +39,22 @@ async function printAllDepartments() {
     p.addRows(resDepts.rows);
     p.printTable();
   } catch (err) {
-    console.error('Error printing ALL departments:', err.stack);
+    console.error('Error viewing ALL departments:', err.stack);
   }
 }
 // Print ALL Roles
 async function printAllRoles() {
-  const datatbase = new DB();
-  // Query to get ALL roles
-  let resRoles = await datatbase.getAllRoles();
-  // Print ALL roles to the screen
-  const p = new Table();
-  p.addRows(resRoles.rows);
-  p.printTable();
+  try {
+    const datatbase = new DB();
+    // Query to get ALL roles
+    let resRoles = await datatbase.getAllRoles();
+    // Print ALL roles to the screen
+    const p = new Table();
+    p.addRows(resRoles.rows);
+    p.printTable();
+  } catch (err) {
+    console.error('Error viewing ALL roles:', err.stack);
+  }
 }
 // Print ALL Employees
 async function printAllEmployees() {
@@ -76,7 +81,7 @@ async function printAllEmployees() {
     p.addRows(employees);
     p.printTable();
   } catch (err) {
-    console.error('Error printing ALL employees:', err.stack);
+    console.error('Error viewing ALL employees:', err.stack);
   }
 }
 // Add a Department
@@ -334,6 +339,48 @@ async function updateEmployeeManager() {
     console.error("Error updating employee's manager:", err.stack);
   }
 }
+// View Employee By Manager
+async function printEmployeeByManager() {
+  try {
+    let i = 0;
+    let currEmployee = '';
+    let currManager = '';
+    let employeesByManagers = [];
+    const datatbase = new DB();
+    // Run query to get all Managers
+    let resManagers = await datatbase.getAllManagers();
+    // Run query to get all employees ordered by their Managers
+    let resEmployeesByManager = await datatbase.getEmployeesByManager();
+    // Add all employees who do NOT have manages first
+    for(i=0; i<resEmployeesByManager.rowCount; i++) {
+      if(resEmployeesByManager.rows[i].manager_id === null) {
+        currEmployee = `${resEmployeesByManager.rows[i].eFirstName} ${resEmployeesByManager.rows[i].eLastName}`;
+        employeesByManagers.push({Manager_Id:'<NONE>', Manager:'<NONE>', Employee_Id:resEmployeesByManager.rows[i].id, Employee:currEmployee});
+      }
+    }
+    // Loop through all managers and list their employees
+    for(i=0; i<resManagers.rowCount; i++) {
+      if(resManagers.rows[i].manager_id === null) {
+        continue;
+      }
+      else {
+        for(let j=0; j<resEmployeesByManager.rowCount; j++) {
+          if(resEmployeesByManager.rows[j].manager_id === resManagers.rows[i].id) {
+            currManager = `${resManagers.rows[i].mFirstName} ${resManagers.rows[i].mLastName}`;
+            currEmployee = `${resEmployeesByManager.rows[j].eFirstName} ${resEmployeesByManager.rows[j].eLastName}`;
+            employeesByManagers.push({Manager_Id:resManagers.rows[i].id, Manager:currManager, Employee_Id:resEmployeesByManager.rows[j].id, Employee:currEmployee});
+          }
+        }
+      }
+    }
+    // Print ALL employees by their manager to the screen
+    const p = new Table();
+    p.addRows(employeesByManagers);
+    p.printTable();
+  } catch (err) {
+    console.error("Error viewing employee by their manager:", err.stack);
+  }
+}
 
 //      
 //      
@@ -392,6 +439,7 @@ async function main() {
             await updateEmployeeManager();
             break;
           case tasksToPerform[8]:     // View employee by manager
+            await printEmployeeByManager();
             break;
           case tasksToPerform[9]:     // View employee by department
             break;

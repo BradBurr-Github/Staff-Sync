@@ -54,6 +54,17 @@ class DB {
                           'LEFT JOIN depts d ON d.id=r.dept_id LEFT JOIN employees m ON m.id=e.manager_id ' +
                           'ORDER BY e.lastName, e.firstName');
     }
+    // Query to return ALL managers
+    getAllManagers() {
+        return this.query('SELECT id, firstName as "mFirstName", lastName as "mLastName" ' +
+                          'FROM employees WHERE id in (SELECT DISTINCT manager_id FROM employees) ' +
+                          'ORDER BY lastName, firstName');
+    }
+    // Query to return employees by their Manager
+    getEmployeesByManager() {
+        return this.query('SELECT manager_id, id, firstName as "eFirstName", lastName as "eLastName" ' +
+                          'FROM employees ORDER BY manager_id');
+    }
     // SQL Statement to add a new Department
     addNewDepartment(deptName) {
         return this.query('INSERT INTO depts (dept_name) VALUES ($1)', deptName);
