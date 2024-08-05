@@ -218,7 +218,7 @@ async function addEmployee() {
     await datatbase.addNewEmployee(arrayAnswers);
     console.log(`Employee "${answer.firstName} ${answer.lastName}" was added to the database.`);
   } catch (err) {
-    console.error('Error adding a role:', err.stack);
+    console.error('Error adding employee:', err.stack);
   }
 }
 // Update Employee's Role
@@ -280,13 +280,64 @@ async function updateEmployeeRole() {
     await datatbase.updateSelectedEmployeeRole(arrayAnswers);
     console.log(`Employee "${answer.employee}" is now assigned the role of "${answer.role}".`);
   } catch (err) {
-    console.error('Error adding a role:', err.stack);
+    console.error("Error updating employee's role:", err.stack);
+  }
+}
+// Update Employee's Manager
+async function updateEmployeeManager() {
+  try {
+    let i = 0;
+    let employees = [];
+    let managers = [];
+    const datatbase = new DB();
+    // Run query to get all Employees
+    let resEmployees = await datatbase.getAllEmployees();
+    // Add employees to array
+    for(i=0; i<resEmployees.rowCount; i++) {
+      employees.push(`${resEmployees.rows[i].eFirstName} ${resEmployees.rows[i].eLastName}`);
+    }
+    // Ask user which employee's manager they want to update
+    const answer = await inquirer.prompt({type:'rawlist', name:'employee', message: "Which employee's manager do you want to update?", choices: employees});
+    // Find the Id of the Employee that was selected
+    let employeeSelected = 1;
+    let currEmployee = '';
+    for(i=0; i<resEmployees.rowCount; i++) {
+      currEmployee = `${resEmployees.rows[i].eFirstName} ${resEmployees.rows[i].eLastName}`;
+      if(currEmployee === answer.employee) {
+        employeeSelected = resEmployees.rows[i].id;
+        break;
+      }
+    }
+    // Add employees to Managers array (excluding employee that was selected previously)
+    managers.push('None');
+    for(i=0; i<resEmployees.rowCount; i++) {
+      if(resEmployees.rows[i].id === employeeSelected)
+        continue;
+      managers.push(`${resEmployees.rows[i].eFirstName} ${resEmployees.rows[i].eLastName}`);
+    }
+    const answerManager = await inquirer.prompt({type:'rawlist', name:'manager', message: "Who is the new manager of the selected employee?", choices: managers});
+    // Find the Id of the 'Manager' that was selected
+    let managerSelected = null;
+    currEmployee = '';
+    for(i=0; i<resEmployees.rowCount; i++) {
+      currEmployee = `${resEmployees.rows[i].eFirstName} ${resEmployees.rows[i].eLastName}`;
+      if(currEmployee === answer.manager) {
+        managerSelected = resEmployees.rows[i].id;
+        break;
+      }
+    }
+    const arrayAnswers = [managerSelected, employeeSelected];
+    // Update employee's manager
+    await datatbase.updateSelectedEmployeeManager(arrayAnswers);
+    console.log(`The manager of "${answer.employee}" is now "${answerManager.manager}".`);
+  } catch (err) {
+    console.error("Error updating employee's manager:", err.stack);
   }
 }
 
 //      
 //      
-//      "Which Employee's Manager do you want to update?"
+//      
 //      "Which Department do you want to delete?"
 //      "Which Role do you want to delete?"
 //      "Which Employee do you want to delete?"
@@ -338,6 +389,7 @@ async function main() {
             await updateEmployeeRole();
             break;
           case tasksToPerform[7]:     // Update employee's manager
+            await updateEmployeeManager();
             break;
           case tasksToPerform[8]:     // View employee by manager
             break;

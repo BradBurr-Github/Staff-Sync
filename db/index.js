@@ -70,6 +70,10 @@ class DB {
     updateSelectedEmployeeRole(updateRoleArray) {
         return this.query('UPDATE employees SET role_id=$1 WHERE id=$2', updateRoleArray);
     }
+    // SQL Statement to update Employee's manager
+    updateSelectedEmployeeManager(updateManagerArray) {
+        return this.query('UPDATE employees SET manager_id=$1 WHERE id=$2', updateManagerArray);
+    }
 }
 
 module.exports = DB;
