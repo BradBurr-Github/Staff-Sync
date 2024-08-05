@@ -63,8 +63,12 @@ class DB {
         return this.query('INSERT INTO roles (title, salary, dept_id) VALUES ($1,$2,$3)', roleAnswersArray);
     }
     // SQL Statement to add a new Employee
-    addNewEmployee(roleAnswersArray) {
-        return this.query('INSERT INTO employees (firstName, lastName, role_id, manager_id) VALUES ($1,$2,$3,$4)', roleAnswersArray);
+    addNewEmployee(newEmployeeArray) {
+        return this.query('INSERT INTO employees (firstName, lastName, role_id, manager_id) VALUES ($1,$2,$3,$4)', newEmployeeArray);
+    }
+    // SQL Statement to update Employee's role
+    updateSelectedEmployeeRole(updateRoleArray) {
+        return this.query('UPDATE employees SET role_id=$1 WHERE id=$2', updateRoleArray);
     }
 }
 

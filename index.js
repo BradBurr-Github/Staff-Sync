@@ -23,25 +23,9 @@ const questionDbTask = [
       ]
   }
 ];
-
-
-//      "Which Emploee's role do you want to update?"
-//      "Which Role do you want to assign the selected employee?"
-//      "Which Employee's Manager do you want to update?"
-//      "Which Department do you want to delete?"
-//      "Which Role do you want to delete?"
-//      "Which Employee do you want to delete?"
-//      "Which Department do you want to view a total utilized budget for?"
-
-  
-
-  // {
-  //   type: 'input',
-  //   name: 'salary',
-  //   message: 'What is the Salary of the role?', default: '50000'
-  // },
-
-// FUNCTIONS TO PRINT QUERIES
+ 
+// ==========================
+// DATABASE FUNCTIONS
 // ==========================
 // Print ALL Departments
 async function printAllDepartments() {
@@ -123,12 +107,14 @@ async function addRole() {
     }
     // Put 3 questions into an array
     const questionsAddRole = [
-      { type: 'input',
+      {
+        type: 'input',
         name: 'role',
         message:'What is the name of the new role?',
         validate: function(value) {if (value.trim() !== '') {return true;}return 'Please enter a valid name.';}
       },
-      { type: 'input',
+      {
+        type: 'input',
         name: 'salary',
         message:'What is the salary of the new role?',
         validate: function(value) {
@@ -183,7 +169,8 @@ async function addEmployee() {
     }
     // Put 3 questions into an array
     const questionsAddEmployee = [
-      { type: 'input',
+      {
+        type: 'input',
         name: 'firstName',
         message:"What is the employee's first name?",
         validate: function(value) {if (value.trim() !== '') {return true;}return 'Please enter a valid first name.';}
@@ -234,6 +221,78 @@ async function addEmployee() {
     console.error('Error adding a role:', err.stack);
   }
 }
+// Update Employee's Role
+async function updateEmployeeRole() {
+  try {
+    let i = 0;
+    let roles = [];
+    let employees = [];
+    const datatbase = new DB();
+    // Run query to get all Roles
+    let resRoles = await datatbase.getAllRoles();
+    // Add roles to array
+    for(i=0; i<resRoles.rowCount; i++) {
+      roles.push(resRoles.rows[i].Title);
+    }
+    // Run query to get all Employees
+    let resEmployees = await datatbase.getAllEmployees();
+    // Add employees to array
+    for(i=0; i<resEmployees.rowCount; i++) {
+      employees.push(`${resEmployees.rows[i].eFirstName} ${resEmployees.rows[i].eLastName}`);
+    }
+    // Put 2 questions into an array
+    const questionsUpdateEmployeeRole = [
+      {
+        type: 'rawlist',
+        name: 'employee',
+        message: "Which employee's role do you want to update?",
+        choices: employees
+      },
+      {
+        type: 'rawlist',
+        name: 'role',
+        message: "Which role do you want to assign the selected employee?",
+        choices: roles
+      }
+    ];
+    // Ask user the 2 questions needed for updating employee's role
+    const answer = await inquirer.prompt(questionsUpdateEmployeeRole);
+    // Find the Id of the Role that was selected by the user
+    let roleSelected = 1;
+    for(i=0; i<resRoles.rowCount; i++) {
+      if( resRoles.rows[i].Title === answer.role ) {
+        roleSelected = resRoles.rows[i].Id;
+        break;
+      }
+    }
+    // Find the Id of the Employee that was selected
+    let employeeSelected = 1;
+    let currEmployee = '';
+    for(i=0; i<resEmployees.rowCount; i++) {
+      currEmployee = `${resEmployees.rows[i].eFirstName} ${resEmployees.rows[i].eLastName}`;
+      if(currEmployee === answer.employee) {
+        employeeSelected = resEmployees.rows[i].id;
+        break;
+      }
+    }
+    const arrayAnswers = [roleSelected, employeeSelected];
+    // Update employee's role
+    await datatbase.updateSelectedEmployeeRole(arrayAnswers);
+    console.log(`Employee "${answer.employee}" is now assigned the role of "${answer.role}".`);
+  } catch (err) {
+    console.error('Error adding a role:', err.stack);
+  }
+}
+
+//      
+//      
+//      "Which Employee's Manager do you want to update?"
+//      "Which Department do you want to delete?"
+//      "Which Role do you want to delete?"
+//      "Which Employee do you want to delete?"
+//      "Which Department do you want to view a total utilized budget for?"
+
+
 
 // Display the Main Menu to ask the user the what action they want to perform
 async function loadMainMenuPrompts() {
@@ -276,6 +335,7 @@ async function main() {
             await addEmployee();
             break;
           case tasksToPerform[6]:     // Update an employee role
+            await updateEmployeeRole();
             break;
           case tasksToPerform[7]:     // Update employee's manager
             break;
