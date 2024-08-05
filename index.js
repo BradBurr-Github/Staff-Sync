@@ -326,7 +326,7 @@ async function updateEmployeeManager() {
     currEmployee = '';
     for(i=0; i<resEmployees.rowCount; i++) {
       currEmployee = `${resEmployees.rows[i].eFirstName} ${resEmployees.rows[i].eLastName}`;
-      if(currEmployee === answer.manager) {
+      if(currEmployee === answerManager.manager) {
         managerSelected = resEmployees.rows[i].id;
         break;
       }
@@ -384,8 +384,7 @@ async function printEmployeeByManager() {
 // View Employee By Department
 async function printEmployeeByDept() {
   try {
-    let i = 0;1
-    
+    let i = 0
     let currEmployee = '';
     let employeesWithRoles = [];
     const datatbase = new DB();
