@@ -36,7 +36,7 @@ class DB {
     }
 
     // Query to return ALL Departments
-    getAllDepartments() {
+    getAllDepts() {
         return this.query('SELECT id as "Id", dept_name as "Dept_Name" ' +
                           'FROM depts ORDER BY id');
     }
@@ -64,6 +64,29 @@ class DB {
     getEmployeesByManager() {
         return this.query('SELECT manager_id, id, firstName as "eFirstName", lastName as "eLastName" ' +
                           'FROM employees ORDER BY manager_id');
+    }
+    // Query to return employees by their Departments
+    getEmployeesByDept() {
+        return this.query('SELECT e.id as "eId", e.firstName as "eFirstName", e.lastName as "eLastName", d.id as "dId", ' +
+                          'd.dept_name FROM employees e JOIN roles r ON r.id=e.role_id JOIN depts d ON d.id=r.dept_id ' +
+                          'ORDER BY d.dept_name, e.lastName, e.firstName');
+    }
+    // Query to return roles in a specific department
+    getRolesInDepts(deptId) {
+        return this.query('SELECT id FROM roles WHERE dept_id=$1', deptId);
+    }
+    // Query to return employees in a list of Role Ids
+    getEmployeesInRoles(roles) {
+        return this.query('SELECT id, firstName as "eFirstName", lastname as "eLastName" ' +
+                          'FROM employees WHERE role_id=$1 ORDER BY lastName, firstName', roles);
+    }
+    // Query to return <UNASSIGNED> Role
+    getUnassignedRole(unassigned) {
+        return this.query('SELECT id FROM roles WHERE title=$1 ', unassigned);
+    }
+    // Query to return <UNASSIGNED> Dept
+    getUnassignedDept(unassigned) {
+        return this.query('SELECT id FROM depts WHERE dept_name=$1 ', unassigned);
     }
     // SQL Statement to add a new Department
     addNewDepartment(deptName) {

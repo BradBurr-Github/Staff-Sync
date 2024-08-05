@@ -33,7 +33,7 @@ async function printAllDepartments() {
   try {
     const datatbase = new DB();
     // Query to get ALL departments
-    let resDepts = await datatbase.getAllDepartments();
+    const resDepts = await datatbase.getAllDepts();
     // Print ALL departments to the screen
     const p = new Table();
     p.addRows(resDepts.rows);
@@ -47,7 +47,7 @@ async function printAllRoles() {
   try {
     const datatbase = new DB();
     // Query to get ALL roles
-    let resRoles = await datatbase.getAllRoles();
+    const resRoles = await datatbase.getAllRoles();
     // Print ALL roles to the screen
     const p = new Table();
     p.addRows(resRoles.rows);
@@ -63,7 +63,7 @@ async function printAllEmployees() {
     let manager = '';
     const datatbase = new DB();
     // Query to get ALL employees
-    let resEmps = await datatbase.getAllEmployees();
+    const resEmps = await datatbase.getAllEmployees();
     // Add employees to array
     for(let i=0; i<resEmps.rowCount; i++) {
       if(resEmps.rows[i].mFirstName === null || resEmps.rows[i].mLastName === null ) {
@@ -105,7 +105,7 @@ async function addRole() {
     let depts = [];
     const datatbase = new DB();
     // Run query to get all Departments
-    let resDepts = await datatbase.getAllDepartments();
+    const resDepts = await datatbase.getAllDepts();
     // Add departments to array
     for(i=0; i<resDepts.rowCount; i++) {
       depts.push(resDepts.rows[i].Dept_Name);
@@ -160,13 +160,13 @@ async function addEmployee() {
     let managers = [];
     const datatbase = new DB();
     // Run query to get all Roles
-    let resRoles = await datatbase.getAllRoles();
+    const resRoles = await datatbase.getAllRoles();
     // Add roles to array
     for(i=0; i<resRoles.rowCount; i++) {
       roles.push(resRoles.rows[i].Title);
     }
     // Run query to get all Employees
-    let resEmployees = await datatbase.getAllEmployees();
+    const resEmployees = await datatbase.getAllEmployees();
     // Add employees to array
     managers.push('None');
     for(i=0; i<resEmployees.rowCount; i++) {
@@ -234,13 +234,13 @@ async function updateEmployeeRole() {
     let employees = [];
     const datatbase = new DB();
     // Run query to get all Roles
-    let resRoles = await datatbase.getAllRoles();
+    const resRoles = await datatbase.getAllRoles();
     // Add roles to array
     for(i=0; i<resRoles.rowCount; i++) {
       roles.push(resRoles.rows[i].Title);
     }
     // Run query to get all Employees
-    let resEmployees = await datatbase.getAllEmployees();
+    const resEmployees = await datatbase.getAllEmployees();
     // Add employees to array
     for(i=0; i<resEmployees.rowCount; i++) {
       employees.push(`${resEmployees.rows[i].eFirstName} ${resEmployees.rows[i].eLastName}`);
@@ -296,7 +296,7 @@ async function updateEmployeeManager() {
     let managers = [];
     const datatbase = new DB();
     // Run query to get all Employees
-    let resEmployees = await datatbase.getAllEmployees();
+    const resEmployees = await datatbase.getAllEmployees();
     // Add employees to array
     for(i=0; i<resEmployees.rowCount; i++) {
       employees.push(`${resEmployees.rows[i].eFirstName} ${resEmployees.rows[i].eLastName}`);
@@ -348,9 +348,9 @@ async function printEmployeeByManager() {
     let employeesByManagers = [];
     const datatbase = new DB();
     // Run query to get all Managers
-    let resManagers = await datatbase.getAllManagers();
+    const resManagers = await datatbase.getAllManagers();
     // Run query to get all employees ordered by their Managers
-    let resEmployeesByManager = await datatbase.getEmployeesByManager();
+    const resEmployeesByManager = await datatbase.getEmployeesByManager();
     // Add all employees who do NOT have manages first
     for(i=0; i<resEmployeesByManager.rowCount; i++) {
       if(resEmployeesByManager.rows[i].manager_id === null) {
@@ -381,7 +381,39 @@ async function printEmployeeByManager() {
     console.error("Error viewing employee by their manager:", err.stack);
   }
 }
-
+// View Employee By Department
+async function printEmployeeByDept() {
+  try {
+    let i = 0;1
+    
+    let currEmployee = '';
+    let employeesWithRoles = [];
+    const datatbase = new DB();
+    // Run query to get '<UNASSIGNED>' Role and Dept
+    const resUnassignedRoleId = await datatbase.getUnassignedRole([unassigned]);
+    const resUnassignedDeptId = await datatbase.getUnassignedDept([unassigned]);
+    // Run query to get all employees by Department
+    const resEmpsByDept = await datatbase.getEmployeesByDept();
+    // Add all employees who do NOT have Depts first
+    for(i=0; i<resEmpsByDept.rowCount; i++) {
+      if(resEmpsByDept.rows[i].dId === resUnassignedDeptId.rows[0].id) {
+        currEmployee = `${resEmpsByDept.rows[i].eFirstName} ${resEmpsByDept.rows[i].eLastName}`;
+        employeesWithRoles.push({Dept_Id:unassigned, Dept:unassigned, Employee_Id:resEmpsByDept.rows[i].eId, Employee:currEmployee});
+      }
+    }
+    // Add the rest of employees
+    for(i=0; i<resEmpsByDept.rowCount; i++) {
+      currEmployee = `${resEmpsByDept.rows[i].eFirstName} ${resEmpsByDept.rows[i].eLastName}`;
+      employeesWithRoles.push({Dept_Id:resEmpsByDept.rows[i].dId, Dept:resEmpsByDept.rows[i].dept_name, Employee_Id:resEmpsByDept.rows[i].eId, Employee:currEmployee});
+    }
+    // Print ALL employees by their Dept to the screen
+    const p = new Table();
+    p.addRows(employeesWithRoles);
+    p.printTable();
+  } catch (err) {
+    console.error("Error viewing employee by dept:", err.stack);
+  }
+}
 //      
 //      
 //      
@@ -442,6 +474,7 @@ async function main() {
             await printEmployeeByManager();
             break;
           case tasksToPerform[9]:     // View employee by department
+            await printEmployeeByDept();
             break;
           case tasksToPerform[10]:    // Delete a department
             break;
