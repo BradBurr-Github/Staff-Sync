@@ -35,10 +35,15 @@ class DB {
         }
     }
 
-    // Query to return ALL Departments
-    getAllDepts() {
+    // Query to return ALL Departments - Order by Id
+    getAllDeptsOrderById() {
         return this.query('SELECT id as "Id", dept_name as "Dept_Name" ' +
                           'FROM depts ORDER BY id');
+    }
+    // Query to return ALL Departments - Order by Dept_Name
+    getAllDeptsOrderByDeptName() {
+        return this.query('SELECT id as "Id", dept_name as "Dept_Name" ' +
+                          'FROM depts ORDER BY dept_name');
     }
     // Query to return ALL Roles
     getAllRoles() {
@@ -71,15 +76,6 @@ class DB {
                           'd.dept_name FROM employees e JOIN roles r ON r.id=e.role_id JOIN depts d ON d.id=r.dept_id ' +
                           'ORDER BY d.dept_name, e.lastName, e.firstName');
     }
-    // Query to return roles in a specific department
-    getRolesInDepts(deptId) {
-        return this.query('SELECT id FROM roles WHERE dept_id=$1', deptId);
-    }
-    // Query to return employees in a list of Role Ids
-    getEmployeesInRoles(roles) {
-        return this.query('SELECT id, firstName as "eFirstName", lastname as "eLastName" ' +
-                          'FROM employees WHERE role_id=$1 ORDER BY lastName, firstName', roles);
-    }
     // Query to return <UNASSIGNED> Role
     getUnassignedRole(unassigned) {
         return this.query('SELECT id FROM roles WHERE title=$1 ', unassigned);
@@ -100,13 +96,33 @@ class DB {
     addNewEmployee(newEmployeeArray) {
         return this.query('INSERT INTO employees (firstName, lastName, role_id, manager_id) VALUES ($1,$2,$3,$4)', newEmployeeArray);
     }
+    // SQL Statement to update Role's department
+    updateSelectedRoleDepartment(udpateRoleDeptArray) {
+        return this.query('UPDATE roles SET dept_id=$1 WHERE id=$2', udpateRoleDeptArray);
+    }
     // SQL Statement to update Employee's role
-    updateSelectedEmployeeRole(updateRoleArray) {
-        return this.query('UPDATE employees SET role_id=$1 WHERE id=$2', updateRoleArray);
+    updateSelectedEmployeeRole(updateEmployeeRoleArray) {
+        return this.query('UPDATE employees SET role_id=$1 WHERE id=$2', updateEmployeeRoleArray);
     }
     // SQL Statement to update Employee's manager
     updateSelectedEmployeeManager(updateManagerArray) {
         return this.query('UPDATE employees SET manager_id=$1 WHERE id=$2', updateManagerArray);
+    }
+    // SQL Statement to re-assign Depts of Roles BEFORE deleting Depts
+    updatedDeptIdsToUnassigned(updateDeptIdsArray) {
+        return this.query('UPDATE roles SET dept_id=$1 WHERE dept_id=$2', updateDeptIdsArray);
+    }
+    // SQL Statement to delete a Department
+    deleteSelectedDept(deptDeleteArray) {
+        return this.query('DELETE FROM depts WHERE id=$1', deptDeleteArray);
+    }
+    // SQL Statement to re-assign Roles of Employees BEFORE deleting Roles
+    updatedRoleIdsToUnassigned(updateRoleIdsArray) {
+        return this.query('UPDATE employees SET role_id=$1 WHERE role_id=$2', updateRoleIdsArray);
+    }
+    // SQL Statement to delete a Department
+    deleteSelectedRole(roleDeleteArray) {
+        return this.query('DELETE FROM roles WHERE id=$1', roleDeleteArray);
     }
 }
 

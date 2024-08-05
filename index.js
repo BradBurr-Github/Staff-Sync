@@ -8,8 +8,9 @@ const { Table } = require('console-table-printer');  // package to format table 
 let keepRunningApp = true;
 const unassigned = '<UNASSIGNED>';
 const tasksToPerform = ["View all departments","View all roles","View all employees","Add a department","Add a role",
-                        "Add an employee","Update an employee role","Update employee's manager","View employee by manager","View employee by department",
-                        "Delete a department","Delete a role","Delete an employee","View total utilized budget of a department","EXIT APPLICATION"]
+                        "Add an employee","Update a role department","Update an employee role","Update employee's manager","View employee by manager",
+                        "View employee by department","Delete a department","Delete a role","Delete an employee","View total utilized budget of a department",
+                        "EXIT APPLICATION"]
 
 // Questions for user to determine what task(s) they want to perform
 const questionDbTask = [
@@ -20,7 +21,8 @@ const questionDbTask = [
       choices: [
           tasksToPerform[0],tasksToPerform[1],tasksToPerform[2],tasksToPerform[3],tasksToPerform[4],
           tasksToPerform[5],tasksToPerform[6],tasksToPerform[7],tasksToPerform[8],tasksToPerform[9],
-          tasksToPerform[10],tasksToPerform[11],tasksToPerform[12],tasksToPerform[13],tasksToPerform[14]
+          tasksToPerform[10],tasksToPerform[11],tasksToPerform[12],tasksToPerform[13],tasksToPerform[14],
+          tasksToPerform[15]
       ]
   }
 ];
@@ -33,7 +35,7 @@ async function printAllDepartments() {
   try {
     const datatbase = new DB();
     // Query to get ALL departments
-    const resDepts = await datatbase.getAllDepts();
+    const resDepts = await datatbase.getAllDeptsOrderById();
     // Print ALL departments to the screen
     const p = new Table();
     p.addRows(resDepts.rows);
@@ -105,7 +107,7 @@ async function addRole() {
     let depts = [];
     const datatbase = new DB();
     // Run query to get all Departments
-    const resDepts = await datatbase.getAllDepts();
+    const resDepts = await datatbase.getAllDeptsOrderById();
     // Add departments to array
     for(i=0; i<resDepts.rowCount; i++) {
       depts.push(resDepts.rows[i].Dept_Name);
@@ -224,6 +226,70 @@ async function addEmployee() {
     console.log(`Employee "${answer.firstName} ${answer.lastName}" was added to the database.`);
   } catch (err) {
     console.error('Error adding employee:', err.stack);
+  }
+}
+// Update Role's Department
+async function updateRoleDepartment() {
+  try {
+    let i = 0;
+    let roles = [];
+    let depts = [];
+    const datatbase = new DB();
+    // Run query to get all Roles
+    const resRoles = await datatbase.getAllRoles();
+    // Run query to get '<UNASSIGNED>' Role
+    const resUnassignedRoleId = await datatbase.getUnassignedRole([unassigned]);
+    // Add roles to array
+    for(i=0; i<resRoles.rowCount; i++) {
+      if(resRoles.rows[i].Id === resUnassignedRoleId.rows[0].id)
+        continue;
+      roles.push(resRoles.rows[i].Title);
+    }
+    // Run query to get all Depts
+    const resDepts = await datatbase.getAllDeptsOrderByDeptName();
+    // Add depts to array
+    for(i=0; i<resDepts.rowCount; i++) {
+      depts.push(`${resDepts.rows[i].Dept_Name}`);
+    }
+    // Put 2 questions into an array
+    const questionsUpdateRoleDept = [
+      {
+        type: 'rawlist',
+        name: 'role',
+        message: "Which role's departent do you want to update?",
+        choices: roles
+      },
+      {
+        type: 'rawlist',
+        name: 'dept',
+        message: "Which department do you want to assign the selected role?",
+        choices: depts
+      }
+    ];
+    // Ask user the 2 questions needed for updating employee's role
+    const answer = await inquirer.prompt(questionsUpdateRoleDept);
+    // Find the Id of the Dept that was selected by the user
+    let deptSelected = 1;
+    for(i=0; i<resDepts.rowCount; i++) {
+      if( resDepts.rows[i].Dept_Name === answer.dept ) {
+        deptSelected = resDepts.rows[i].Id;
+        break;
+      }
+    }
+    // Find the Id of the Role that was selected
+    let roleSelected = 1;
+    for(i=0; i<resRoles.rowCount; i++) {
+      if(resRoles.rows[i].Title === answer.role) {
+        roleSelected = resRoles.rows[i].Id;
+        break;
+      }
+    }
+    const arrayAnswers = [deptSelected, roleSelected];
+    // Update role's department
+    await datatbase.updateSelectedRoleDepartment(arrayAnswers);
+    console.log(`Role "${answer.role}" is now assigned the "${answer.dept}" department.`);
+  } catch (err) {
+    console.error("Error updating role's department:", err.stack);
   }
 }
 // Update Employee's Role
@@ -388,8 +454,7 @@ async function printEmployeeByDept() {
     let currEmployee = '';
     let employeesWithRoles = [];
     const datatbase = new DB();
-    // Run query to get '<UNASSIGNED>' Role and Dept
-    const resUnassignedRoleId = await datatbase.getUnassignedRole([unassigned]);
+    // Run query to get '<UNASSIGNED>' Dept
     const resUnassignedDeptId = await datatbase.getUnassignedDept([unassigned]);
     // Run query to get all employees by Department
     const resEmpsByDept = await datatbase.getEmployeesByDept();
@@ -413,11 +478,110 @@ async function printEmployeeByDept() {
     console.error("Error viewing employee by dept:", err.stack);
   }
 }
+// Delete a Department
+async function deleteDepartment() {
+  try {
+    const datatbase = new DB();
+    // Query to get ALL departments ordered by Dept_Name
+    const resDepts = await datatbase.getAllDeptsOrderByDeptName();
+    // Run query to get '<UNASSIGNED>' Dept
+    const resUnassignedDeptId = await datatbase.getUnassignedDept([unassigned]);
+    // Add depts to array
+    const deptsChoices = [];
+    for(i=0; i<resDepts.rowCount; i++) {
+      if(resDepts.rows[i].Id === resUnassignedDeptId.rows[0].id)
+        continue;
+      deptsChoices.push(resDepts.rows[i].Dept_Name);
+    }
+    // Ask user which department they want to delete
+    const answer = await inquirer.prompt({type:'rawlist', name:'dept', message: "Which Department do you want to delete?", choices: deptsChoices});
+    let deptSelected = 1;
+    for(i=0; i<resDepts.rowCount; i++) {
+      if(resDepts.rows[i].Dept_Name === answer.dept) {
+        deptSelected = resDepts.rows[i].Id;
+        break;
+      }
+    }
+    // Update Dept Ids of Roles linked to Dept Id being deleted to <UNASSIGNED>
+    await datatbase.updatedDeptIdsToUnassigned([resUnassignedDeptId.rows[0].id, deptSelected]);
+    // Delete Dept Id
+    await datatbase.deleteSelectedDept([deptSelected]);
+    console.log(`The "${answer.dept}" department was deleted from the database.`);
+  } catch (err) {
+    console.error("Error deleting a department:", err.stack);
+  }
+}
+// Delete a Role
+async function deleteRole() {
+  try {
+    const datatbase = new DB();
+    // Query to get ALL roles
+    const resRoles = await datatbase.getAllRoles();
+    // Run query to get '<UNASSIGNED>' Role
+    const resUnassignedRoleId = await datatbase.getUnassignedRole([unassigned]);
+    // Add roles to array
+    const rolesChoices = [];
+    for(i=0; i<resRoles.rowCount; i++) {
+      if(resRoles.rows[i].Id === resUnassignedRoleId.rows[0].id)
+        continue;
+      rolesChoices.push(resRoles.rows[i].Title);
+    }
+    // Ask user which role they want to delete
+    const answer = await inquirer.prompt({type:'rawlist', name:'role', message: "Which Role do you want to delete?", choices: rolesChoices});
+    let roleSelected = 1;
+    for(i=0; i<resRoles.rowCount; i++) {
+      if(resRoles.rows[i].Title === answer.role) {
+        roleSelected = resRoles.rows[i].Id;
+        break;
+      }
+    }
+    // Update Role Ids of Employees linked to Role Id being deleted to <UNASSIGNED>
+    await datatbase.updatedRoleIdsToUnassigned([resUnassignedRoleId.rows[0].id, roleSelected]);
+    // Delete Role Id
+    await datatbase.deleteSelectedRole([roleSelected]);
+    console.log(`The "${answer.role}" role was deleted from the database.`);
+  } catch (err) {
+    console.error("Error deleting a role:", err.stack);
+  }
+}
+// Delete an Employee
+async function deleteEmployee() {
+  // try {
+  //   const datatbase = new DB();
+  //   // Query to get ALL employees
+  //   const resEmployees = await datatbase.getAllEmployees();
+    
+    
+  //   // Add roles to array
+  //   const rolesChoices = [];
+  //   for(i=0; i<resRoles.rowCount; i++) {
+  //     if(resRoles.rows[i].Id === resUnassignedRoleId.rows[0].id)
+  //       continue;
+  //     rolesChoices.push(resRoles.rows[i].Title);
+  //   }
+  //   // Ask user which role they want to delete
+  //   const answer = await inquirer.prompt({type:'rawlist', name:'role', message: "Which Employee do you want to delete?", choices: rolesChoices});
+  //   let roleSelected = 1;
+  //   for(i=0; i<resRoles.rowCount; i++) {
+  //     if(resRoles.rows[i].Title === answer.role) {
+  //       roleSelected = resRoles.rows[i].Id;
+  //       break;
+  //     }
+  //   }
+  //   // Update Role Ids of Employees linked to Role Id being deleted to <UNASSIGNED>
+  //   await datatbase.updatedRoleIdsToUnassigned([resUnassignedRoleId.rows[0].id, roleSelected]);
+  //   // Delete Role Id
+  //   await datatbase.deleteSelectedRole([roleSelected]);
+  //   console.log(`The "${answer.role}" role was deleted from the database.`);
+  // } catch (err) {
+  //   console.error("Error deleting a role:", err.stack);
+  // }
+}
+
+
 //      
 //      
 //      
-//      "Which Department do you want to delete?"
-//      "Which Role do you want to delete?"
 //      "Which Employee do you want to delete?"
 //      "Which Department do you want to view a total utilized budget for?"
 
@@ -439,8 +603,8 @@ async function main() {
     // Loop through the Main Menu until 'EXIT APPLICATION' is selected
     while (keepRunningApp) {
       const action = await loadMainMenuPrompts();
-      // Check if 'EXIT APPLICATION' (tasksToPerform[14]) was selected
-      if (action === tasksToPerform[14]) {
+      // Check if 'EXIT APPLICATION' (tasksToPerform[15]) was selected
+      if (action === tasksToPerform[15]) {
         keepRunningApp = false;
         console.log('Thank you for using Staff Sync.  Goodbye!');
       } else {
@@ -463,25 +627,31 @@ async function main() {
           case tasksToPerform[5]:     // Add an employee
             await addEmployee();
             break;
-          case tasksToPerform[6]:     // Update an employee role
+          case tasksToPerform[6]:     // Update a role department
+            await updateRoleDepartment();
+            break;
+          case tasksToPerform[7]:     // Update an employee role
             await updateEmployeeRole();
             break;
-          case tasksToPerform[7]:     // Update employee's manager
+          case tasksToPerform[8]:     // Update employee's manager
             await updateEmployeeManager();
             break;
-          case tasksToPerform[8]:     // View employee by manager
+          case tasksToPerform[9]:     // View employee by manager
             await printEmployeeByManager();
             break;
-          case tasksToPerform[9]:     // View employee by department
+          case tasksToPerform[10]:     // View employee by department
             await printEmployeeByDept();
             break;
-          case tasksToPerform[10]:    // Delete a department
+          case tasksToPerform[11]:    // Delete a department
+            await deleteDepartment();
             break;
-            case tasksToPerform[11]:  // Delete a role
+          case tasksToPerform[12]:  // Delete a role
+            await deleteRole();
             break;
-            case tasksToPerform[12]:  // Delete an employee
+          case tasksToPerform[13]:  // Delete an employee
+            deleteEmployee();
             break;
-            case tasksToPerform[13]:  // View total utilized budget of a department
+          case tasksToPerform[14]:  // View total utilized budget of a department
             break;
         }
       }
