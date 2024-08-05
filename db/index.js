@@ -124,6 +124,18 @@ class DB {
     deleteSelectedRole(roleDeleteArray) {
         return this.query('DELETE FROM roles WHERE id=$1', roleDeleteArray);
     }
+    // SQL Statement to delete a Department
+    deleteSelectedRole(roleDeleteArray) {
+        return this.query('DELETE FROM roles WHERE id=$1', roleDeleteArray);
+    }
+    // SQL Statement to update any Employee who have selected employee as their manager and set it to null
+    updateEmployeeManagerToNULL(employeeUpdateArray) {
+        return this.query('UPDATE employees SET manager_id=null WHERE manager_id=$1', employeeUpdateArray);
+    }
+    // SQL Statement to delete an Employee
+    deleteSelectedEmployee(employeeDeleteArray) {
+        return this.query('DELETE FROM employees WHERE id=$1', employeeDeleteArray);
+    }
 }
 
 module.exports = DB;

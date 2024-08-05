@@ -546,36 +546,34 @@ async function deleteRole() {
 }
 // Delete an Employee
 async function deleteEmployee() {
-  // try {
-  //   const datatbase = new DB();
-  //   // Query to get ALL employees
-  //   const resEmployees = await datatbase.getAllEmployees();
-    
-    
-  //   // Add roles to array
-  //   const rolesChoices = [];
-  //   for(i=0; i<resRoles.rowCount; i++) {
-  //     if(resRoles.rows[i].Id === resUnassignedRoleId.rows[0].id)
-  //       continue;
-  //     rolesChoices.push(resRoles.rows[i].Title);
-  //   }
-  //   // Ask user which role they want to delete
-  //   const answer = await inquirer.prompt({type:'rawlist', name:'role', message: "Which Employee do you want to delete?", choices: rolesChoices});
-  //   let roleSelected = 1;
-  //   for(i=0; i<resRoles.rowCount; i++) {
-  //     if(resRoles.rows[i].Title === answer.role) {
-  //       roleSelected = resRoles.rows[i].Id;
-  //       break;
-  //     }
-  //   }
-  //   // Update Role Ids of Employees linked to Role Id being deleted to <UNASSIGNED>
-  //   await datatbase.updatedRoleIdsToUnassigned([resUnassignedRoleId.rows[0].id, roleSelected]);
-  //   // Delete Role Id
-  //   await datatbase.deleteSelectedRole([roleSelected]);
-  //   console.log(`The "${answer.role}" role was deleted from the database.`);
-  // } catch (err) {
-  //   console.error("Error deleting a role:", err.stack);
-  // }
+  try {
+    const datatbase = new DB();
+    // Query to get ALL employees
+    const resEmployees = await datatbase.getAllEmployees();
+    // Add roles to array
+    const employeeChoices = [];
+    for(i=0; i<resEmployees.rowCount; i++) {
+      employeeChoices.push(`${resEmployees.rows[i].eFirstName} ${resEmployees.rows[i].eLastName}`);
+    }
+    // Ask user which employee they want to delete
+    const answer = await inquirer.prompt({type:'rawlist', name:'employee', message: "Which Employee do you want to delete?", choices: employeeChoices});
+    let employeeSelected = 1;
+    let currEmployee = '';
+    for(i=0; i<resEmployees.rowCount; i++) {
+      currEmployee = `${resEmployees.rows[i].eFirstName} ${resEmployees.rows[i].eLastName}`;
+      if(currEmployee === answer.employee) {
+        employeeSelected = resEmployees.rows[i].id;
+        break;
+      }
+    }
+    // Update all employees who have selected employee as their manager and set them to NULL
+    await datatbase.updateEmployeeManagerToNULL([employeeSelected]);
+    // Delete Employee
+    await datatbase.deleteSelectedEmployee([employeeSelected]);
+    console.log(`Employee "${answer.employee}" was deleted from the database.`);
+  } catch (err) {
+    console.error("Error deleting an employee:", err.stack);
+  }
 }
 
 
@@ -649,7 +647,7 @@ async function main() {
             await deleteRole();
             break;
           case tasksToPerform[13]:  // Delete an employee
-            deleteEmployee();
+            await deleteEmployee();
             break;
           case tasksToPerform[14]:  // View total utilized budget of a department
             break;
