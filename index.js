@@ -575,15 +575,47 @@ async function deleteEmployee() {
     console.error("Error deleting an employee:", err.stack);
   }
 }
-
-
-//      
-//      
-//      
-//      "Which Employee do you want to delete?"
-//      "Which Department do you want to view a total utilized budget for?"
-
-
+// Delete an Employee
+async function printUtilizedBudgetForDept() {
+  try {
+    const datatbase = new DB();
+    // Query to get ALL departments ordered by Dept_Name
+    const resDepts = await datatbase.getAllDeptsOrderByDeptName();
+    // Add depts to array
+    const deptsChoices = [];
+    for(i=0; i<resDepts.rowCount; i++) {
+      deptsChoices.push(resDepts.rows[i].Dept_Name);
+    }
+    // Ask user which employee they want to delete
+    const answer = await inquirer.prompt({type:'rawlist', name:'dept', message: "Which department do you want to view a total utilized budget for?", choices: deptsChoices});
+    let deptSelected = 1;
+    for(i=0; i<resDepts.rowCount; i++) {
+      if(resDepts.rows[i].Dept_Name === answer.dept) {
+        deptSelected = resDepts.rows[i].Id;
+        break;
+      }
+    }
+    let resBudget = await datatbase.getEmployeeSalaryByDept([deptSelected]);
+    // Loop through results formatting data
+    let totalBudget = 0;
+    let budgetArray = [];
+    let currEmployee = '';
+    for(i=0; i<resBudget.rowCount; i++) {
+      currEmployee = `${resBudget.rows[i].eFirstName} ${resBudget.rows[i].eLastName}`;
+      totalBudget += parseInt(resBudget.rows[i].salary);
+      budgetArray.push({Employee_Id:resBudget.rows[i].eId, Employee:currEmployee, Salary:resBudget.rows[i].salary});
+    }
+    // Add dashes and then the totals
+    budgetArray.push({Employee_Id:'-----', Employee:'-----', Salary:'-----'})
+    budgetArray.push({Employee_Id:'', Employee:`${answer.dept} Total:`, Salary:totalBudget});
+    // Print ALL employees and their salary totals for Dept selected to the screen
+    const p = new Table();
+    p.addRows(budgetArray);
+    p.printTable();
+  } catch (err) {
+    console.error("Error viewing budget utitilzation by dept:", err.stack);
+  }
+}
 
 // Display the Main Menu to ask the user the what action they want to perform
 async function loadMainMenuPrompts() {
@@ -650,6 +682,7 @@ async function main() {
             await deleteEmployee();
             break;
           case tasksToPerform[14]:  // View total utilized budget of a department
+            await printUtilizedBudgetForDept();
             break;
         }
       }

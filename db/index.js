@@ -76,6 +76,12 @@ class DB {
                           'd.dept_name FROM employees e JOIN roles r ON r.id=e.role_id JOIN depts d ON d.id=r.dept_id ' +
                           'ORDER BY d.dept_name, e.lastName, e.firstName');
     }
+    // Query to return employee info and salaries by Dept
+    getEmployeeSalaryByDept(deptArray) {
+        return this.query('SELECT e.id as "eId", e.firstName as "eFirstName", e.lastName as "eLastName", r.salary ' +
+                          'FROM employees e JOIN roles r ON r.id=e.role_id JOIN depts d ON d.id=r.dept_id ' +
+                          'WHERE d.id=$1 ORDER BY e.lastName, e.firstName', deptArray);
+    }
     // Query to return <UNASSIGNED> Role
     getUnassignedRole(unassigned) {
         return this.query('SELECT id FROM roles WHERE title=$1 ', unassigned);
