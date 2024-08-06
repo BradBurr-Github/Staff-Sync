@@ -18,7 +18,7 @@ Staff Sync allows a user to add, edit and delete Employees of their company in a
 npm install
 <a id="usage"></a>
 ## Usage
-This application is public and the code can easily be cloned to be used by anyone.
+This repository is Public and can be used by anyone.  To view the video demonstration of this project, please click <a href="https://drive.google.com/file/d/1K_jXpI39qLctbhLen03-dyzVzCjrWZit/view" target="_blank">here</a>.
 <a id="license"></a>
 ## License
 This project is not currently licensed.
